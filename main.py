@@ -11,15 +11,11 @@ if __name__ == '__main__':
         email, password = bot.get_credentials()
         bot.login(email, password, driver)
         
-        bot.click_play(driver)
         time_start = time()
-        sleep(2)
-        time_elapsed = time() - time_start
 
         soup = bot.get_html(driver)
         select_random(driver)
-
-        sleep(2)
+        sleep(2) # Wait for page to load
 
         url = get_problem(driver)
         code = get_code(driver)

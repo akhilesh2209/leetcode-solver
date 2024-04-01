@@ -13,7 +13,7 @@ class LeetcodeBot():
     def login(self, email, password, driver):
         driver.maximize_window()
         driver.fullscreen_window()
-        driver.get("https://leetcode.com/login/")
+        driver.get("https://leetcode.com/accounts/login/")
         
         username = driver.find_element(By.ID, "username")
         username.click()
@@ -22,6 +22,7 @@ class LeetcodeBot():
         pwd = driver.find_element(By.ID, "password")
         pwd.click()
         pwd.send_keys(password)
+        sleep(10) # Give person time to verify that they are a human
         
         log = driver.find_element(By.ID, "login")
         log.click()
