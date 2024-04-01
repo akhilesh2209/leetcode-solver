@@ -1,5 +1,5 @@
 from time import *
-import datetime, pyperclip
+import datetime
 from bs4 import BeautifulSoup
 from selenium import webdriver
 

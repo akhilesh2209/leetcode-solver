@@ -1,6 +1,6 @@
 from bot import *
 from time import *
-import Random
+import random
 from openai import OpenAI
 
 
