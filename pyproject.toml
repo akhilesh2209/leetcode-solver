@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "leetcode-solver"
+version = "0.1.0"
+description = "A Leetcode bot"
+authors = ["Lorenzo Scaturchio"]
+license = "GNU General Public License"
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.12,<=3.13"
+selenium = "^4.27.1"
+beautifulsoup4 = "^4.12.3"
+openai = "^1.57.0"
+python-dotenv = "^1.0.1"
+playwright = "^1.41.2"
+agentql = "^1.6.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
