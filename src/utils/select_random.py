@@ -7,8 +7,15 @@ RANDOM_QUERY = """
 }
 """
 
-def select_random(page: Page) -> bool:
-    """Select a random problem"""
+def select_random_problem(page: Page) -> bool:
+    """Select a random problem from LeetCode
+    
+    Args:
+        page (Page): Playwright page object
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
     try:
         # Go to the problemset page
         page.goto("https://leetcode.com/problemset/")
