@@ -42,9 +42,6 @@ def solve_problem(page: Page, language: str = "Python3") -> bool:
     global _found_python3
     
     try:
-        # Set window size to ensure consistent layout
-        page.set_viewport_size({"width": 1920, "height": 1080})
-        
         # Get current URL
         current_url = page.url
         logging.info(f"Current problem URL: {current_url}")
