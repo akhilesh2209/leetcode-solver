@@ -49,7 +49,7 @@ def login(page: Page, url, browser) -> bool:
             # Wait for iframe to be available
             iframe_locator = page.frame_locator("iframe[title='Widget containing checkbox for hCaptcha security challenge']")
             checkbox = iframe_locator.locator("#checkbox")
-            checkbox.wait_for(timeout=10000)  # Wait up to 10 seconds
+            checkbox.wait_for(timeout=40000)  # Wait up to 40 seconds
             checkbox.click()
             logging.info("Clicked Cloudflare checkbox")
             page.wait_for_timeout(2000)  # Wait for animation
