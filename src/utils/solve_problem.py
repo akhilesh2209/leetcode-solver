@@ -1,6 +1,9 @@
 import os
 import logging
 import re
+import tempfile
+import pyperclip
+from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 from agentql.ext.playwright.sync_api import Page
@@ -92,52 +95,61 @@ def solve_problem(page: Page, language: str = "Python3") -> bool:
         
         # Construct prompt with problem details
         prompt = f"""
+        You are a LeetCode problem solver. You will be given the following problem:
         Problem Title: {problem_title}
         Problem Content: {problem_content}
         Problem Link: https://leetcode.com/problems/{problem_title.replace(' ', '-').lower()}
         Current Language: {current_lang_text}
         Editor Content: {editor_content}
         
-        Please provide a solution to this LeetCode problem that:
+        Please provide a solution that:
         1. Is efficient and optimized
         2. Includes no comments or any explanation, only the solution
         3. Follows best practices for {current_lang_text}
-        4. Uses the function name as provided in the editor content
-        5. Make sure it doesn't say '''python3''' in the beginning or end of solution or anything else that indicates you are an AI.
+        4. Uses the code provided in the editor
+        5. Make sure it doesn't say '''python3''' in the beginning or end of solution or anything else that indicates you are an AI
+        6. IMPORTANT: The solution MUST be wrapped in a Solution class, like this:
+           class Solution:
+               def method_name(self, params):
+                   # your solution here
         """
         
         # Get solution from OpenAI
         logging.info("Getting solution from OpenAI...")
         completion = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[{"role": "user", "content": prompt}]
         )
         solution = completion.choices[0].message.content
         
         # Format solution before submitting
-        logging.info(f"Current solution: {solution}")
+        print(f"Current solution: {solution}")
         solution = _format_solution(solution)
         
         # Type the solution into the editor
         editor = problem_data.code_editor.editor_content
-        # Try clicking the monaco editor directly
         page.locator(".monaco-editor").click()
         page.wait_for_timeout(1000)
         
-        # Use keyboard shortcuts for selection and deletion
+        # Clear existing content
         page.keyboard.press("Control+A")
         page.keyboard.press("Delete")
         page.wait_for_timeout(1000)
         
         try:
-            editor.fill(solution)
+            # Copy solution to clipboard and paste
+            pyperclip.copy(solution)
+            page.keyboard.press("Control+V")
             page.wait_for_timeout(1000)
         except Exception as e:
             logging.error(f"Error typing solution: {str(e)}")
             return False
         
         # Submit the solution
-        page.wait_for_timeout(10000)
+        page.keyboard.press("Control+A")
+        page.wait_for_timeout(100)
+        page.keyboard.press("Alt+Shift+F")
+        page.wait_for_timeout(7000)
         submit_button = page.locator("text=Submit")
         submit_button.click()
         logging.info("Submitted solution")
@@ -190,49 +202,18 @@ def _format_solution(solution: str) -> str:
     # Remove markdown code block indicators if present
     solution = re.sub(r'^```\w*\n|```$', '', solution.strip())
     
+    # Create a temporary file and format it
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as tmp:
+        tmp.write(solution)
+        tmp_path = tmp.name
+    
     try:
-        import black
-        
-        # Format with black using string mode
-        mode = black.Mode(
-            line_length=88,
-            string_normalization=True,
-            is_pyi=False,
-        )
-        formatted_solution = black.format_str(solution, mode=mode)
-        
-        # Ensure proper class indentation and trailing newline
-        lines = formatted_solution.splitlines()
-        formatted_lines = []
-        for line in lines:
-            if line.startswith('class '):
-                formatted_lines.append(line)
-            else:
-                formatted_lines.append(line)
-        
-        return '\n'.join(formatted_lines) + '\n'
-        
-    except ImportError:
-        # Fallback to basic formatting if black is not available
-        lines = solution.splitlines()
-        formatted_lines = []
-        current_indent = 0
-        
-        for line in lines:
-            stripped = line.lstrip()
-            if not stripped:
-                formatted_lines.append('')
-                continue
-                
-            # Add line with proper indentation
-            formatted_lines.append('    ' * current_indent + stripped)
-            
-            # Adjust indent based on line content
-            if stripped.endswith(':'):
-                current_indent += 1
-            elif stripped.startswith(('return', 'break', 'continue', 'pass')):
-                current_indent = max(0, current_indent - 1)
-            elif stripped.startswith(('else:', 'elif', 'except:', 'finally:')):
-                current_indent = max(0, current_indent - 1)
-        
-        return '\n'.join(formatted_lines) + '\n'
+        os.system(f"black {tmp_path}")
+        with open(tmp_path, 'r') as f:
+            formatted = f.read()
+        return formatted
+    except Exception as e:
+        logging.error(f"Error formatting solution: {str(e)}")
+        return solution  # Return original if formatting fails
+    finally:
+        os.unlink(tmp_path)  # Clean up temp file
