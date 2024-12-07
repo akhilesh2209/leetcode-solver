@@ -149,7 +149,7 @@ def solve_problem(page: Page, language: str = "Python3") -> bool:
         page.keyboard.press("Control+A")
         page.wait_for_timeout(100)
         page.keyboard.press("Alt+Shift+F")
-        page.wait_for_timeout(7000)
+        page.wait_for_timeout(2000)
         submit_button = page.locator("text=Submit")
         submit_button.click()
         logging.info("Submitted solution")
