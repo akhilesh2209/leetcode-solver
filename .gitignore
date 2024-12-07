@@ -1,3 +1,4 @@
 parameters.py
 .env
 leetcode_login.json
+logs/
