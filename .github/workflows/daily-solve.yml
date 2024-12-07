@@ -1,0 +1,55 @@
+name: Daily LeetCode Solver
+
+on:
+  schedule:
+    # Run at a random time between 8 AM and 5 PM PST
+    - cron: '0 15-24 * * *'  # This will run between 8 AM and 5 PM PST
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          poetry install
+          poetry run playwright install chromium
+          poetry run playwright install-deps
+
+      - name: Generate random time delay
+        run: |
+          # Generate random delay between 0 and 32400 seconds (9 hours)
+          DELAY=$((RANDOM % 32400))
+          echo "Waiting for $DELAY seconds..."
+          sleep $DELAY
+
+      - name: Create leetcode_login.json
+        env:
+          LEETCODE_LOGIN_JSON: ${{ secrets.LEETCODE_LOGIN_JSON }}
+        run: |
+          echo "$LEETCODE_LOGIN_JSON" > leetcode_login.json
+
+      - name: Run LeetCode Solver
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AGENTQL_API_KEY: ${{ secrets.AGENTQL_API_KEY }}
+        run: poetry run python src/bot.py  # Will use random number between 1-11
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: leetcode-solver-logs
+          path: logs/leetcode_solver.log

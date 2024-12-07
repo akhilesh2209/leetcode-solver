@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import logging
+import random
 import agentql
 from pathlib import Path
 from dotenv import load_dotenv
@@ -30,8 +31,7 @@ logging.basicConfig(
 )
 
 def main():
-    # Get number of problems to solve from command line argument
-    num_problems = 1  # default to 1 problem
+    # Get number of problems to solve from command line argument or random
     if len(sys.argv) > 1:
         try:
             num_problems = int(sys.argv[1])
@@ -41,11 +41,14 @@ def main():
         except ValueError:
             logging.error("Invalid number of problems specified")
             return
+    else:
+        num_problems = random.randint(1, 11)  # Random number between 1 and 11
     
     logging.info(f"Starting LeetCode Solver Bot - Will solve {num_problems} problems")
     start_time = time.time()
 
     with sync_playwright() as p:
+        # Launch browser in headless mode for CI/CD
         browser = p.chromium.launch(headless=False)
         state_path = os.path.join(os.getcwd(), "leetcode_login.json")
         
@@ -53,6 +56,7 @@ def main():
         if not os.path.exists(state_path):
             logging.info("No login state found. Logging in...")
             page = agentql.wrap(browser.new_page())
+            page.set_viewport_size({"width": 1920, "height": 1080})
             if not login(page, INITIAL_URL, browser):
                 logging.error("Failed to login")
                 return
