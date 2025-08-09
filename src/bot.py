@@ -17,7 +17,7 @@ from utils.solve_problem import solve_problem
 Path("logs").mkdir(exist_ok=True)
 
 load_dotenv()
-os.environ["AGENTQL_API_KEY"] = os.getenv('AGENTQL_API_KEY')
+
 INITIAL_URL = "https://leetcode.com/accounts/login/"
 
 # Configure logging
